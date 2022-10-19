@@ -1,0 +1,6 @@
+*.out
+*.o
+main
+
+# WIP problems that I do not want to push.
+154-*
