@@ -33,8 +33,8 @@ private:
       return;
     }
 
-    // To prevent duplication, we choose candidate number with index GREATER
-    // THAN SelectionStartIdx.
+    // To prevent combination duplication, we choose candidate number with index
+    // GREATER THAN OR EQAUL TO SelectionStartIdx.
     for (int i = SelectionStartIdx; i < Candidates_->size(); i++) {
       auto Candidate = (*Candidates_)[i];
       Combination.push_back(Candidate);
