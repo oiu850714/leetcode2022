@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
 #include <climits>
+#include <list>
 #include <map>
 #include <numeric>
 #include <queue>
+#include <set>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -19,22 +21,6 @@ struct ListNode {
   ListNode() : val(0), next(nullptr) {}
   ListNode(int x) : val(x), next(nullptr) {}
   ListNode(int x, ListNode *next) : val(x), next(next) {}
-};
-
-// Definition for a Node.
-class Node {
-public:
-  int val;
-  std::vector<Node *> children;
-
-  Node() {}
-
-  Node(int _val) { val = _val; }
-
-  Node(int _val, std::vector<Node *> _children) {
-    val = _val;
-    children = _children;
-  }
 };
 
 // Definition for a binary tree node.
