@@ -2,7 +2,16 @@
 
 class Solution {
 public:
-  std::vector<std::vector<int>> levelOrder(TreeNode *Root) {
+  std::vector<std::vector<int>> levelOrderBottom(TreeNode *Root) {
+    auto LevelOrder = levelOrder_(Root);
+    // Just reverse the solution of ordinary level order traversal.
+    std::reverse(LevelOrder.begin(), LevelOrder.end());
+    return LevelOrder;
+  }
+
+private:
+  // Copied from 102.
+  std::vector<std::vector<int>> levelOrder_(TreeNode *Root) {
     std::vector<std::vector<int>> Ret;
     std::vector<TreeNode *> Queue{Root};
     while (!Queue.empty()) {
