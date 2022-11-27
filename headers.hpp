@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <climits>
+#include <functional>
 #include <list>
 #include <map>
 #include <numeric>
