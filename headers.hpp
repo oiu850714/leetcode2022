@@ -1,11 +1,13 @@
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <climits>
 #include <functional>
 #include <list>
 #include <map>
 #include <numeric>
 #include <queue>
+#include <random>
 #include <set>
 #include <stack>
 #include <string>
