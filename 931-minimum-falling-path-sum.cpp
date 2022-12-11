@@ -3,27 +3,19 @@
 class Solution {
 public:
   int minFallingPathSum(std::vector<std::vector<int>> &Matrix) {
+    assert(!Matrix.empty() && Matrix.size() == Matrix[0].size());
+    const auto N = Matrix.size();
     auto DPRow = Matrix[0];
-    for (int Row = 1; Row < Matrix.size(); Row++) {
-      std::vector<int> NewRow(DPRow.size());
-      for (int Col = 0; Col < Matrix.size(); Col++) {
-        auto UpLeft = 0, Up = 0, UpRight = 0;
-        if (Col == 0) {
-          UpLeft = std::numeric_limits<int>::max();
-          Up = DPRow[Col];
-          UpRight = DPRow[Col + 1];
-        } else if (Col == Matrix.size() - 1) {
-          UpLeft = DPRow[Col - 1];
-          Up = DPRow[Col];
-          UpRight = std::numeric_limits<int>::max();
-        } else {
-          UpLeft = DPRow[Col - 1];
-          Up = DPRow[Col];
-          UpRight = DPRow[Col + 1];
-        }
-        NewRow[Col] = Matrix[Row][Col] + std::min({UpLeft, Up, UpRight});
+    for (int Row = 1; Row < N; Row++) {
+      decltype(DPRow) DPNewRow(N);
+      constexpr auto MAX = std::numeric_limits<int>::max();
+      for (int Col = 0; Col < N; Col++) {
+        auto UpLeft = Col != 0 ? DPRow[Col - 1] : MAX;
+        auto Up = DPRow[Col];
+        auto UpRight = Col != N - 1 ? DPRow[Col + 1] : MAX;
+        DPNewRow[Col] = Matrix[Row][Col] + std::min({UpLeft, Up, UpRight});
       }
-      DPRow.swap(NewRow);
+      DPRow.swap(DPNewRow);
     }
     return *std::min_element(DPRow.begin(), DPRow.end());
   }
