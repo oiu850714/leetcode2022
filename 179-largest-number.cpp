@@ -1,6 +1,6 @@
 #include "headers.hpp"
 
-using namespace std::literals::string_literals;
+using namespace std::string_literals;
 
 class Solution {
 public:
