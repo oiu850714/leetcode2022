@@ -3,22 +3,18 @@
 class Solution {
 public:
   std::string frequencySort(std::string S) {
-    std::map<char, int> CharCount;
+    std::unordered_map<char, int> CharCount;
     for (auto C : S) {
       CharCount[C]++;
     }
-    std::priority_queue<std::pair<int, char>> Heap;
-    for (auto [Char, Count] : CharCount) {
-      Heap.push({Count, Char});
-    }
+    std::vector<std::pair<char, int>> Vec(CharCount.begin(), CharCount.end());
+    // #Elements < 256, so sort is FAST.
+    std::sort(Vec.begin(), Vec.end(), [](const auto &P1, const auto &P2) {
+      return P1.second > P2.second;
+    });
     std::string Ret;
-    Ret.reserve(S.size());
-    while (!Heap.empty()) {
-      auto [Count, Char] = Heap.top();
-      Heap.pop();
-      while (Count-- > 0) {
-        Ret.push_back(Char);
-      }
+    for (auto [Char, Count] : Vec) {
+      Ret += std::string(Count, Char);
     }
     return Ret;
   }

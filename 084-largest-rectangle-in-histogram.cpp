@@ -3,43 +3,40 @@
 class Solution {
 public:
   int largestRectangleArea(std::vector<int> &Heights) {
-    auto NextSmallerHeight = nextSmallerHeights_(Heights);
-    auto PrevSmallerHeight = prevSmallerHeights_(Heights);
+    // The thought is use next smaller element.
+    // NSEIdx(PSEIdx) = Next(Previous) Small Element Indices.
+    // Default value represents the case that there is no smaller element
+    // after(before) NSEIdx[i](PSEIdx[i]).
+    std::vector<int> NSEIdx(Heights.size(), Heights.size());
+    std::vector<int> PSEIdx(Heights.size(), -1);
 
-    int Ret = 0;
-    for (int i = 0; i < Heights.size(); i++) {
-      Ret = std::max(
-          Ret, ((NextSmallerHeight[i] - i) + (i - PrevSmallerHeight[i]) - 1) *
-                   Heights[i]);
-    }
-    return Ret;
-  }
-
-  std::vector<int> nextSmallerHeights_(const std::vector<int> &Heights) {
-    std::vector<int> Ret(Heights.size(), Heights.size());
-
-    std::stack<int> MonoStack;
-    for (int i = 0; i < Heights.size(); i++) {
-      while (!MonoStack.empty() && Heights[i] < Heights[MonoStack.top()]) {
-        Ret[MonoStack.top()] = i;
-        MonoStack.pop();
+    // Calculare NSEIdx and PSEIdx
+    std::stack<int> Stack;
+    for (size_t i = 0; i < Heights.size(); i++) {
+      while (!Stack.empty() && Heights[Stack.top()] > Heights[i]) {
+        NSEIdx[Stack.top()] = i;
+        Stack.pop();
       }
-      MonoStack.push(i);
+      Stack.push(i);
     }
-    return Ret;
-  }
-
-  std::vector<int> prevSmallerHeights_(const std::vector<int> &Heights) {
-    std::vector<int> Ret(Heights.size(), -1);
-
-    std::stack<int> MonoStack;
-    for (int i = Heights.size() - 1; i >= 0; i--) {
-      while (!MonoStack.empty() && Heights[i] < Heights[MonoStack.top()]) {
-        Ret[MonoStack.top()] = i;
-        MonoStack.pop();
+    Stack = {}; // Clear
+    for (size_t i = Heights.size() - 1; i != -1; i--) {
+      while (!Stack.empty() && Heights[Stack.top()] > Heights[i]) {
+        PSEIdx[Stack.top()] = i;
+        Stack.pop();
       }
-      MonoStack.push(i);
+      Stack.push(i);
     }
-    return Ret;
+
+    // For each bar, we calculate the rectangle that:
+    // 1. contains this bar,
+    // 2. has the height as this bar.
+    int MaxArea = 0;
+    for (size_t i = 0; i < Heights.size(); i++) {
+      // Note that we subtract 1 from the "width".
+      auto AreaForBarI = Heights[i] * (NSEIdx[i] - PSEIdx[i] - 1);
+      MaxArea = std::max(MaxArea, AreaForBarI);
+    }
+    return MaxArea;
   }
 };

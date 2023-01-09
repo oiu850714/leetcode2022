@@ -2,14 +2,12 @@
 
 class Solution {
 public:
-  int maxProfit(std::vector<int> &prices) {
+  int maxProfit(std::vector<int> &Prices) {
     int MaxProfit = 0;
-    for (auto BuyDay = prices.begin(), SellDay = prices.begin();
-         SellDay != prices.end(); SellDay++) {
-      MaxProfit = std::max(MaxProfit, *SellDay - *BuyDay);
-      if (*SellDay < *BuyDay) {
-        BuyDay = SellDay;
-      }
+    for (auto MinPriceBeforeSell = Prices[0], SellDay = 1;
+         SellDay < Prices.size(); SellDay++) {
+      MaxProfit = std::max(MaxProfit, Prices[SellDay] - MinPriceBeforeSell);
+      MinPriceBeforeSell = std::min(MinPriceBeforeSell, Prices[SellDay]);
     }
     return MaxProfit;
   }

@@ -1,78 +1,56 @@
 #include "headers.hpp"
 
 class Solution {
+  using IPStrsTy = std::vector<std::string>;
+  using ComponentsTy = std::vector<std::string>;
+
 public:
-  std::vector<std::string> restoreIpAddresses(std::string S) {
-    if (S.size() < 4 || S.size() > 12) {
-      // S is too long or too short to become valid.
-      return {};
-    }
-    // Mark the end of each part of IP.
-    std::vector<int> PointsIdx{};
-    S_ = &S;
-    backtrack_(PointsIdx);
+  IPStrsTy restoreIpAddresses(std::string S) {
+    S_ = std::move(S);
+    ComponentsTy Components;
+    backtrack_(0, Components);
     return std::move(Result_);
   }
 
 private:
-  std::vector<std::string> Result_;
-  std::string const *S_;
+  std::string S_;
+  IPStrsTy Result_;
 
-  void backtrack_(std::vector<int> &PointsIdx) {
-    // Get 4 valid parts,
-    if (PointsIdx.size() == 4) {
-      // and have used all digits.
-      if (PointsIdx.back() == S_->size()) {
-        Result_.push_back(toIP_(PointsIdx));
-      }
+  void backtrack_(int LastCompEnd, ComponentsTy &Components) {
+    if (Components.size() == 4 && LastCompEnd == S_.size()) {
+      Result_.push_back(toIP_(Components));
       return;
     }
 
-    int Beg = !PointsIdx.empty() ? PointsIdx.back() : 0;
-    // End marks the end of new part, so it can be S_->size().
-    for (int End = Beg + 1; End <= S_->size() && isValidInterval_(Beg, End);
-         End++) {
-      PointsIdx.push_back(End);
-      backtrack_(PointsIdx);
-      PointsIdx.pop_back();
-    }
-  }
-
-  // Assume End - Beg >= 1.
-  bool isValidInterval_(int Beg, int End) {
-    std::string Part(S_->begin() + Beg, S_->begin() + End);
-    if (Part.size() == 1) {
-      // A single digit.
-      return true;
-    } else if (Part.size() > 1 && Part[0] == '0') {
-      // Two digits: cannot start with zero.
-      return false;
-    } else if (Part.size() == 2) {
-      return true;
-    } else if (Part.size() == 3) {
-      // Three digits: Can only have 1XX, 2XX.
-      if (Part[0] == '1') {
-        return true;
-      } else if (Part[0] == '2') {
-        // In particular, for 2XX, can only be 20X, 21X, 22X, 23X, 24X, 250 ~
-        // 255.
-        return Part[1] == '0' || Part[1] == '1' || Part[1] == '2' ||
-               Part[1] == '3' || Part[1] == '4' ||
-               (Part[1] == '5' && Part[2] <= '5');
-      } else {
-        // 3XX to 9XX is invalid.
-        return false;
+    for (int i = LastCompEnd + 1; i <= S_.size(); i++) {
+      auto Component = S_.substr(LastCompEnd, i - LastCompEnd);
+      if (isValidComponent_(Component)) {
+        Components.push_back(Component);
+        backtrack_(i, Components);
+        Components.pop_back();
       }
-    } else {
-      return false;
     }
   }
 
-  std::string toIP_(std::vector<int> &PointsIdx) {
-    // Note that substr API is substr(startPos, Len).
-    return S_->substr(0, PointsIdx[0]) + '.' +
-           S_->substr(PointsIdx[0], PointsIdx[1] - PointsIdx[0]) + '.' +
-           S_->substr(PointsIdx[1], PointsIdx[2] - PointsIdx[1]) + '.' +
-           S_->substr(PointsIdx[2], PointsIdx[3] - PointsIdx[2]);
+  std::string toIP_(const ComponentsTy &Components) const {
+    return Components[0] + '.' + Components[1] + '.' + Components[2] + '.' +
+           Components[3];
+  }
+
+  bool isValidComponent_(const std::string &Component) const noexcept {
+    assert(!Component.empty());
+    if (Component.size() == 1) {
+      return true;
+    }
+
+    if (Component.size() == 2) {
+      return Component[0] != '0';
+    }
+
+    if (Component.size() == 3) {
+      return "100" <= Component && Component <= "255";
+    }
+
+    return false;
   }
 };

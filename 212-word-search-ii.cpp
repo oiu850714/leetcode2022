@@ -1,67 +1,48 @@
 #include "headers.hpp"
 #include <memory>
 
-// Modified from 208.
+#include <memory>
+
+// Skip search utils; just used to construct Trie nodes structure.
 class Trie {
 public:
   struct TrieNode {
-    TrieNode() : is_word(false), children(26) {}
-    std::vector<std::unique_ptr<TrieNode>> children;
-    bool is_word;
+    TrieNode() : IsWord_(false), Children_(26) {}
+    bool IsWord_;
+    std::vector<std::unique_ptr<TrieNode>> Children_;
   };
 
-  Trie() : Root_{std::make_unique<TrieNode>()} {}
+  Trie() : Root_(std::make_unique<TrieNode>()) {}
 
   void insert(const std::string &Word) {
     auto Curr = Root_.get();
     for (auto C : Word) {
-      if (!Curr->children[C - 'a']) {
-        Curr->children[C - 'a'] = std::make_unique<TrieNode>();
+      if (!Curr->Children_[C - 'a']) {
+        Curr->Children_[C - 'a'] = std::make_unique<TrieNode>();
       }
-      Curr = Curr->children[C - 'a'].get();
+      Curr = Curr->Children_[C - 'a'].get();
     }
-    Curr->is_word = true;
+    Curr->IsWord_ = true;
   }
 
-  bool search(const std::string &Word) const {
-    auto Curr = Root_.get();
-    for (auto C : Word) {
-      if (!Curr->children[C - 'a']) {
-        return false;
-      }
-      Curr = Curr->children[C - 'a'].get();
-    }
-    return Curr->is_word;
-  }
-
-  bool startsWith(const std::string &Prefix) const {
-    auto Curr = Root_.get();
-    for (auto C : Prefix) {
-      if (!Curr->children[C - 'a']) {
-        return false;
-      }
-      Curr = Curr->children[C - 'a'].get();
-    }
-    return true;
-  }
-
-  const TrieNode *get() const { return Root_.get(); }
+  const TrieNode *getRootTrieNode() const noexcept { return Root_.get(); }
 
 private:
   std::unique_ptr<TrieNode> Root_;
 };
 
 class Solution {
+  using BoardTy = std::vector<std::vector<char>>;
+  using WordsTy = std::vector<std::string>;
 
 public:
-  std::vector<std::string> findWords(std::vector<std::vector<char>> &Board,
-                                     std::vector<std::string> &Words) {
+  WordsTy findWords(BoardTy &Board, const WordsTy &Words) {
     buildTrie_(Words);
-    Board_ = &Board;
-    std::string Explored;
-    for (int i = 0; i < Board.size(); i++) {
-      for (int j = 0; j < Board[i].size(); j++) {
-        backtrack_(Explored, {i, j}, Trie_.get());
+    Board_ = Board; // Board is really small, just copy.
+    for (int Row = 0; Row < Board_.size(); Row++) {
+      for (int Col = 0; Col < Board_[0].size(); Col++) {
+        std::string CurrChars;
+        backtrack_(CurrChars, Row, Col, Trie_.getRootTrieNode());
       }
     }
     return std::move(Result_);
@@ -69,59 +50,56 @@ public:
 
 private:
   Trie Trie_;
-  std::vector<std::string> Result_;
-  std::vector<std::vector<char>> *Board_;
-  const std::vector<std::pair<int, int>> Directions_{
-      {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+  BoardTy Board_;
+  WordsTy Result_;
 
-  void buildTrie_(const std::vector<std::string> &Words) {
+  void buildTrie_(const WordsTy &Words) {
     for (const auto &Word : Words) {
       Trie_.insert(Word);
     }
   }
 
-  void backtrack_(std::string &Explored, std::pair<int, int> LastStep,
-                  const Trie::TrieNode *PrefixNode) {
-    auto [CurRow, CurCol] = LastStep;
-    auto NewChar = (*Board_)[CurRow][CurCol];
-
-    if (NewChar == '#') {
-      return;
-    }
-    // This is equivalent to check that Explored + NewChar is not a prefix in
-    // the Trie.
-    if (PrefixNode->children[NewChar - 'a'] == nullptr) {
+  void backtrack_(std::string &CurrWord, const int Row, const int Col,
+                  const Trie::TrieNode *PrefixTrieNode) {
+    // Explored.
+    if (Board_[Row][Col] == '#') {
       return;
     }
 
-    // Mark explored;
-    (*Board_)[CurRow][CurCol] = '#';
-    Explored.push_back(NewChar);
+    auto NewChar = Board_[Row][Col];
+    // It's impossible the prefix node itself is nullptr.
+    assert(PrefixTrieNode);
+    auto &ChildNode = PrefixTrieNode->Children_[NewChar - 'a'];
+    if (!ChildNode) {
+      // CurrWord + NewChar is not in Trie.
+      return;
+    }
 
-    auto NewPrefixNode = PrefixNode->children[NewChar - 'a'].get();
-    if (NewPrefixNode->is_word) {
-      Result_.push_back(Explored);
-      NewPrefixNode->is_word =
-          false; // XXX: Really a hack for preventing duplication.
-                 // The effect is the same as deleting a word in the Trie.
+    CurrWord.push_back(NewChar);
+    Board_[Row][Col] = '#';
+    if (ChildNode->IsWord_) {
+      Result_.push_back(CurrWord);
+      // Effectively delete the word in Trie to prevent duplication.
+      ChildNode->IsWord_ = false;
     }
 
     for (auto [RowDir, ColDir] : Directions_) {
-      auto NewRow = CurRow + RowDir;
-      auto NewCol = CurCol + ColDir;
-
-      if (isValidRange_(NewRow, NewCol) && (*Board_)[NewRow][NewCol] != '#') {
-        backtrack_(Explored, {NewRow, NewCol}, NewPrefixNode);
+      auto NewRow = RowDir + Row;
+      auto NewCol = ColDir + Col;
+      if (!isValidRange_(NewRow, NewCol)) {
+        continue;
       }
+      backtrack_(CurrWord, NewRow, NewCol, ChildNode.get());
     }
-
-    // Restoring states.
-    (*Board_)[CurRow][CurCol] = NewChar;
-    Explored.pop_back();
+    Board_[Row][Col] = NewChar;
+    CurrWord.pop_back();
   }
 
-  bool isValidRange_(int Row, int Col) {
-    return Row >= 0 && Row < Board_->size() && Col >= 0 &&
-           Col < (*Board_)[0].size();
+  bool isValidRange_(int Row, int Col) const noexcept {
+    return Row >= 0 && Row < Board_.size() && Col >= 0 &&
+           Col < Board_[0].size();
   };
+
+  const std::vector<std::pair<int, int>> Directions_{
+      {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 };

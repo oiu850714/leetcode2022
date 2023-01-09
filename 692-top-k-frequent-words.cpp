@@ -25,8 +25,8 @@ private:
     for (auto &[Word, Count] : WordCount) {
       // Note that the count is inserted as negative.
       // The purpose is to make the heap in the call a "min"-heap that
-      // essentially store the most-frequent word at the root, but compare the
-      // word according to the lexical order.
+      // essentially stores the most-frequent word at the root, but sorts words
+      // with the same frquency using lexical order.
       WordCountVector.push_back({-Count, Word});
     }
     return WordCountVector;

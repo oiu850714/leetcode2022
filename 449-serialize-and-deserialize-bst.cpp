@@ -1,8 +1,6 @@
 #include "headers.hpp"
 
-#include "1008-construct-binary-search-tree-from-preorder-traversal-monostack.cpp"
-
-using SolutionOf1008OfMonoStack = Solution;
+#include <sstream>
 
 class Codec {
 public:
@@ -10,41 +8,55 @@ public:
     if (!Root) {
       return "";
     }
+    auto LeftSerialized = serialize(Root->left);
+    auto RightSerialized = serialize(Root->right);
+    auto RootVal = std::to_string(Root->val);
 
-    std::string Ret{std::to_string(Root->val)};
-    auto LeftSerialize = serialize(Root->left);
-    auto RightSerialize = serialize(Root->right);
-    if (!LeftSerialize.empty()) {
-      Ret += " " + LeftSerialize;
-    }
-    if (!RightSerialize.empty()) {
-      Ret += " " + RightSerialize;
-    }
-    return Ret;
+    return RootVal + (LeftSerialized.empty() ? "" : " ") + LeftSerialized +
+           (RightSerialized.empty() ? "" : " ") + RightSerialized;
   }
 
   TreeNode *deserialize(const std::string &Data) {
-    auto PreorderVals = split_(Data);
-    // Reduce to solution of 1008.
-    return SolutionOf1008OfMonoStack{}.bstFromPreorder(PreorderVals);
+    auto Nums = toNums_(Data);
+    auto NGEIdx = toNGEIdx_(Nums);
+
+    return deserializeRecursive_(0, Nums.size(), Nums, NGEIdx);
   }
 
 private:
-  std::vector<int> split_(const std::string &Data) {
-    if (Data.empty()) {
-      return {};
-    }
+  std::vector<int> toNums_(const std::string &Data) {
     std::vector<int> Ret;
-    for (int ValBeg = 0;;) {
-      auto ValEnd = Data.find_first_of(" ", ValBeg);
-      if (ValEnd == std::string::npos) {
-        Ret.push_back(std::stoi(Data.substr(ValBeg)));
-        break;
-      } else {
-        Ret.push_back(std::stoi(Data.substr(ValBeg, ValEnd - ValBeg)));
-        ValBeg = ValEnd + 1;
-      }
+
+    std::istringstream ISS(Data);
+    int Num = 0;
+    while (ISS >> Num) {
+      Ret.push_back(Num);
     }
     return Ret;
+  }
+
+  // Next Greater Element
+  std::vector<int> toNGEIdx_(const std::vector<int> &Nums) {
+    std::vector<int> NGE(Nums.size(), Nums.size());
+    std::stack<int> Stack;
+    for (size_t i = 0; i < Nums.size(); i++) {
+      while (!Stack.empty() && Nums[Stack.top()] < Nums[i]) {
+        NGE[Stack.top()] = i;
+        Stack.pop();
+      }
+      Stack.push(i);
+    }
+    return NGE;
+  }
+
+  TreeNode *deserializeRecursive_(size_t Beg, size_t End,
+                                  const std::vector<int> &Nums,
+                                  const std::vector<int> &NGEIdx) {
+    if (Beg == End) {
+      return nullptr;
+    }
+    return new TreeNode(
+        Nums[Beg], deserializeRecursive_(Beg + 1, NGEIdx[Beg], Nums, NGEIdx),
+        deserializeRecursive_(NGEIdx[Beg], End, Nums, NGEIdx));
   }
 };
