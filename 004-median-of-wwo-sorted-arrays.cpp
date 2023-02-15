@@ -56,7 +56,7 @@ private:
         elementsBesideBounds(Nums1, Nums2, Bound1, Bound2);
     if ((Nums1.size() + Nums2.size()) % 2) {
       // Odd number of elements total.
-      // The median is the minimum of the elements in the left of the two
+      // The median is the maximum of the elements in the left of the two
       // bounds.
       return std::max(FirstLeft, SecondLeft);
     } else {
